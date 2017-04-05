@@ -1,27 +1,58 @@
 class MarkovGenerator
-  def self.from_file file
-    from_text File.read(file)
+  attr_accessor :dictionary
+
+  def initialize
   end
 
-  def self.from_text text
-    freq_hash = Hash.new {|hash, key| hash[key] = [] }
 
-    text.split.each_cons(2) do |word, following_word|
-      freq_hash[word] << following_word
+  def add_data(filename)
+    words = word_array(filename)
+    create_word_hash(words)
+  end
+
+  def new_text
+    dictionary
+  end
+
+  def generate_sentence(current_word)
+    sentence = ""
+    until(current_word.chars.last.match(/[.!]/))
+      current_word = next_word(current_word)
+      sentence += " " + current_word
     end
+    puts sentence.lstrip
+  end
 
-
-    require 'pp'
-    pp freq_hash
-    current_word = freq_hash.keys.sample
-    sentence = [current_word]
-
-    12.times do
-      p current_word
-      current_word = freq_hash[current_word].sample
-      sentence << current_word
+  private
+  
+  def next_word(current_word)
+    if word_frequency = @dictionary[current_word]
+      weighted_random(word_frequency)
+    else
+      next_word(@dictionary.keys.sample)
     end
+  end
 
-    sentence.join(" ")
+  def weighted_random(words_and_frequencies)
+    words_and_frequencies.map { |word, frequency| [word] * frequency }.flatten.sample
+  end
+
+  private
+
+  def create_word_hash(array_of_words)
+    return_hash = {}
+    array_of_words.each do |word|
+      puts word
+    end
+  end
+
+  def word_array(filename)
+    File.open( filename ){ |f|  f.read.split }
   end
 end
+
+mv = MarkovGenerator.new
+
+mv.add_data(ARGV.first)
+
+10.times { mv.generate_sentence("never")}
